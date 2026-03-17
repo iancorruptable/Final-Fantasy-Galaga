@@ -21,6 +21,8 @@ export class Boss {
   private introTimer: number = 0;
   private targetX: number;
   private transitionActive: boolean = false;
+  private spiralAngle: number = 0;
+  private meteorTimer: number = 0;
 
   constructor(scene: Phaser.Scene, difficultyMod: number = 1) {
     this.scene = scene;
@@ -69,15 +71,16 @@ export class Boss {
     const bullets: BulletRequest[] = [];
     const phase = BOSS.phases[this.currentPhase];
 
-    // Movement
+    // Movement - gets more aggressive in later phases
     this.moveTimer += delta;
-    const moveSpeed = 80 + this.currentPhase * 20;
+    const moveSpeed = 80 + this.currentPhase * 30;
     const dx = this.targetX - this.sprite.x;
     if (Math.abs(dx) < 5) {
       this.targetX = randomRange(60, GAME_WIDTH - 60);
     }
     this.sprite.x += Math.sign(dx) * Math.min(Math.abs(dx), moveSpeed * (delta / 1000));
-    this.sprite.y = 100 + Math.sin(this.moveTimer * 0.001) * 20;
+    const bobAmplitude = 20 + this.currentPhase * 8;
+    this.sprite.y = 100 + Math.sin(this.moveTimer * 0.001) * bobAmplitude;
 
     // Firing
     this.fireTimer -= delta;
@@ -86,14 +89,20 @@ export class Boss {
       const angle = angleToTarget(this.sprite.x, this.sprite.y, playerX, playerY);
 
       switch (phase.pattern) {
-        case 'spiral':
-          this.patternSpiral(bullets, phase.bulletSpeed);
+        case 'firaga':
+          this.patternFiraga(bullets, angle, phase.bulletSpeed);
           break;
-        case 'spread':
-          this.patternSpread(bullets, angle, phase.bulletSpeed);
+        case 'thundaga':
+          this.patternThundaga(bullets, playerX, phase.bulletSpeed);
           break;
-        case 'barrage':
-          this.patternBarrage(bullets, angle, phase.bulletSpeed);
+        case 'blizzaga':
+          this.patternBlizzaga(bullets, angle, phase.bulletSpeed);
+          break;
+        case 'ultima':
+          this.patternUltima(bullets, angle, phase.bulletSpeed);
+          break;
+        case 'meteor':
+          this.patternMeteor(bullets, phase.bulletSpeed);
           break;
       }
     }
@@ -104,24 +113,11 @@ export class Boss {
     return bullets;
   }
 
-  private patternSpiral(bullets: BulletRequest[], speed: number): void {
-    this.phaseTimer++;
-    const baseAngle = this.phaseTimer * 0.5;
-    for (let i = 0; i < 4; i++) {
-      const a = baseAngle + (Math.PI * 2 * i) / 4;
-      bullets.push({
-        x: this.sprite.x + Math.cos(a) * 20,
-        y: this.sprite.y + BOSS.height / 2,
-        angle: a + Math.PI / 2,
-        speed,
-        isBoss: true,
-      });
-    }
-  }
-
-  private patternSpread(bullets: BulletRequest[], angle: number, speed: number): void {
-    const count = 7;
-    const totalSpread = 1.2;
+  // Phase 1: Firaga - spreading fire waves
+  private patternFiraga(bullets: BulletRequest[], angle: number, speed: number): void {
+    // 5-bullet aimed spread
+    const count = 5;
+    const totalSpread = 0.8;
     for (let i = 0; i < count; i++) {
       const a = angle - totalSpread / 2 + (totalSpread * i) / (count - 1);
       bullets.push({
@@ -134,26 +130,139 @@ export class Boss {
     }
   }
 
-  private patternBarrage(bullets: BulletRequest[], angle: number, speed: number): void {
-    // Aimed shots + random spray
+  // Phase 2: Thundaga - lightning columns raining down
+  private patternThundaga(bullets: BulletRequest[], playerX: number, speed: number): void {
+    // Vertical columns of bullets targeting player's X position
+    const spread = 40;
+    for (let i = -2; i <= 2; i++) {
+      const x = playerX + i * spread + randomRange(-15, 15);
+      bullets.push({
+        x: Math.max(20, Math.min(GAME_WIDTH - 20, x)),
+        y: this.sprite.y + BOSS.height / 2,
+        angle: Math.PI / 2 + randomRange(-0.1, 0.1), // Mostly straight down
+        speed: speed * 1.2,
+        isBoss: true,
+      });
+    }
+    // Side bolts
+    bullets.push({
+      x: this.sprite.x - 40,
+      y: this.sprite.y,
+      angle: Math.PI / 2 + 0.3,
+      speed: speed * 0.9,
+      isBoss: true,
+    });
+    bullets.push({
+      x: this.sprite.x + 40,
+      y: this.sprite.y,
+      angle: Math.PI / 2 - 0.3,
+      speed: speed * 0.9,
+      isBoss: true,
+    });
+  }
+
+  // Phase 3: Blizzaga - spiraling ice shards
+  private patternBlizzaga(bullets: BulletRequest[], angle: number, speed: number): void {
+    this.spiralAngle += 0.7;
+    // Spiral ring of 6 bullets
+    for (let i = 0; i < 6; i++) {
+      const a = this.spiralAngle + (Math.PI * 2 * i) / 6;
+      bullets.push({
+        x: this.sprite.x + Math.cos(a) * 25,
+        y: this.sprite.y + BOSS.height / 2,
+        angle: a + Math.PI / 2,
+        speed,
+        isBoss: true,
+      });
+    }
+    // Plus aimed triple shot
     for (let i = -1; i <= 1; i++) {
       bullets.push({
-        x: this.sprite.x + i * 25,
+        x: this.sprite.x + i * 20,
         y: this.sprite.y + BOSS.height / 2,
-        angle: angle + i * 0.1,
+        angle: angle + i * 0.15,
         speed: speed * 1.1,
         isBoss: true,
       });
     }
-    // Random spray
-    for (let i = 0; i < 3; i++) {
+  }
+
+  // Phase 4: Ultima - everything at once
+  private patternUltima(bullets: BulletRequest[], angle: number, speed: number): void {
+    this.spiralAngle += 0.5;
+
+    // Outer spiral ring (8 bullets)
+    for (let i = 0; i < 8; i++) {
+      const a = this.spiralAngle + (Math.PI * 2 * i) / 8;
       bullets.push({
-        x: this.sprite.x + randomRange(-30, 30),
+        x: this.sprite.x + Math.cos(a) * 30,
         y: this.sprite.y + BOSS.height / 2,
-        angle: randomRange(Math.PI / 4, Math.PI * 3 / 4),
-        speed: speed * randomRange(0.7, 1),
+        angle: a + Math.PI / 2,
+        speed: speed * 0.85,
         isBoss: true,
       });
+    }
+
+    // Aimed burst (5 shots)
+    const spread = 1.0;
+    for (let i = 0; i < 5; i++) {
+      bullets.push({
+        x: this.sprite.x,
+        y: this.sprite.y + BOSS.height / 2,
+        angle: angle - spread / 2 + (spread * i) / 4,
+        speed: speed * 1.15,
+        isBoss: true,
+      });
+    }
+
+    // Random scatter
+    for (let i = 0; i < 3; i++) {
+      bullets.push({
+        x: this.sprite.x + randomRange(-35, 35),
+        y: this.sprite.y + BOSS.height / 2,
+        angle: randomRange(Math.PI / 6, Math.PI * 5 / 6),
+        speed: speed * randomRange(0.6, 1.0),
+        isBoss: true,
+      });
+    }
+  }
+
+  // Phase 5: Meteor - absolute chaos, bullet hell
+  private patternMeteor(bullets: BulletRequest[], speed: number): void {
+    this.spiralAngle += 0.4;
+    this.meteorTimer++;
+
+    // Double counter-rotating spirals (5 each)
+    for (let i = 0; i < 5; i++) {
+      const a1 = this.spiralAngle + (Math.PI * 2 * i) / 5;
+      const a2 = -this.spiralAngle + (Math.PI * 2 * i) / 5;
+      bullets.push({
+        x: this.sprite.x + Math.cos(a1) * 20,
+        y: this.sprite.y + BOSS.height / 2,
+        angle: a1 + Math.PI / 2,
+        speed: speed * 0.8,
+        isBoss: true,
+      });
+      bullets.push({
+        x: this.sprite.x + Math.cos(a2) * 20,
+        y: this.sprite.y + BOSS.height / 2,
+        angle: a2 + Math.PI / 2,
+        speed: speed * 0.8,
+        isBoss: true,
+      });
+    }
+
+    // Meteor rain from random positions
+    if (this.meteorTimer % 3 === 0) {
+      for (let i = 0; i < 4; i++) {
+        bullets.push({
+          x: randomRange(30, GAME_WIDTH - 30),
+          y: this.sprite.y + BOSS.height / 2 - 10,
+          angle: Math.PI / 2 + randomRange(-0.2, 0.2),
+          speed: speed * 1.3,
+          isBoss: true,
+        });
+      }
     }
   }
 
@@ -179,10 +288,12 @@ export class Boss {
     audio.bossPhaseTransition();
 
     // Flash effect
-    this.sprite.setTintFill(COLORS.magenta);
+    const phaseColors = [COLORS.red, COLORS.gold, COLORS.crystal, COLORS.magenta, COLORS.purple];
+    const color = phaseColors[phase] || COLORS.magenta;
+    this.sprite.setTintFill(color);
 
     // Screen flash
-    const flash = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.magenta, 0.3)
+    const flash = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, color, 0.35)
       .setDepth(100);
 
     this.scene.tweens.add({
@@ -235,30 +346,40 @@ export class Boss {
     this.isActive = false;
     const audio = getAudio();
 
-    // Multi-explosion defeat sequence
-    const explosionCount = 8;
+    // Multi-explosion defeat sequence - longer and more dramatic
+    const explosionCount = 12;
     for (let i = 0; i < explosionCount; i++) {
       this.scene.time.delayedCall(i * 200, () => {
-        const ex = this.sprite.x + randomRange(-40, 40);
-        const ey = this.sprite.y + randomRange(-30, 30);
+        const ex = this.sprite.x + randomRange(-50, 50);
+        const ey = this.sprite.y + randomRange(-40, 40);
 
         this.scene.add.particles(ex, ey, 'particle_fire', {
-          speed: { min: 40, max: 120 },
+          speed: { min: 40, max: 140 },
           scale: { start: 0.5, end: 0 },
           alpha: { start: 1, end: 0 },
           lifespan: 400,
-          quantity: 12,
+          quantity: 15,
           blendMode: Phaser.BlendModes.ADD,
           emitting: false,
-        }).explode(12, ex, ey);
+        }).explode(15, ex, ey);
 
         audio.enemyDestroy();
       });
     }
 
-    // Final explosion
+    // Final massive explosion
     this.scene.time.delayedCall(explosionCount * 200, () => {
       this.scene.add.particles(this.sprite.x, this.sprite.y, 'particle_gold', {
+        speed: { min: 100, max: 300 },
+        scale: { start: 0.8, end: 0 },
+        alpha: { start: 1, end: 0 },
+        lifespan: 1000,
+        quantity: 60,
+        blendMode: Phaser.BlendModes.ADD,
+        emitting: false,
+      }).explode(60, this.sprite.x, this.sprite.y);
+
+      this.scene.add.particles(this.sprite.x, this.sprite.y, 'particle_crystal', {
         speed: { min: 80, max: 250 },
         scale: { start: 0.6, end: 0 },
         alpha: { start: 1, end: 0 },
@@ -268,13 +389,13 @@ export class Boss {
         emitting: false,
       }).explode(40, this.sprite.x, this.sprite.y);
 
-      // Screen flash
-      const flash = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.white, 0.5)
+      // Big white screen flash
+      const flash = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, COLORS.white, 0.7)
         .setDepth(100);
       this.scene.tweens.add({
         targets: flash,
         alpha: 0,
-        duration: 600,
+        duration: 800,
         onComplete: () => flash.destroy(),
       });
 

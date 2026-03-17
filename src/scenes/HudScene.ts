@@ -124,7 +124,7 @@ export class HudScene extends Phaser.Scene {
     // Boss health bar (hidden initially)
     const bossBarWidth = GAME_WIDTH - 80;
     this.bossBarContainer = this.add.container(GAME_WIDTH / 2, hudTop + 50);
-    this.bossLabel = this.add.text(0, -14, 'ASTRAL DREADNOUGHT', {
+    this.bossLabel = this.add.text(0, -14, 'CHAOS BAHAMUT', {
       fontSize: '11px',
       fontFamily: 'Arial, sans-serif',
       color: '#ff4466',
@@ -209,7 +209,7 @@ export class HudScene extends Phaser.Scene {
     let color = '#ffffff';
 
     if (data.isBoss) {
-      text = 'WARNING\nASTRAL DREADNOUGHT\nAPPROACHING';
+      text = 'WARNING\nCHAOS BAHAMUT\nAPPROACHING';
       color = '#ff3344';
     } else if (data.isElite) {
       text = `WAVE ${data.wave}\nELITE INCOMING`;

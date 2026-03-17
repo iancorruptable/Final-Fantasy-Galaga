@@ -112,15 +112,17 @@ export const ENEMIES = {
 };
 
 export const BOSS = {
-  hp: 150,
+  hp: 500,
   width: 120,
   height: 100,
   phases: [
-    { hpThreshold: 1.0, fireRate: 1400, bulletSpeed: 200, pattern: 'spiral' },
-    { hpThreshold: 0.65, fireRate: 1000, bulletSpeed: 240, pattern: 'spread' },
-    { hpThreshold: 0.30, fireRate: 700, bulletSpeed: 280, pattern: 'barrage' },
+    { hpThreshold: 1.0, fireRate: 1200, bulletSpeed: 210, pattern: 'firaga' },
+    { hpThreshold: 0.80, fireRate: 1000, bulletSpeed: 230, pattern: 'thundaga' },
+    { hpThreshold: 0.55, fireRate: 800, bulletSpeed: 260, pattern: 'blizzaga' },
+    { hpThreshold: 0.30, fireRate: 600, bulletSpeed: 290, pattern: 'ultima' },
+    { hpThreshold: 0.12, fireRate: 400, bulletSpeed: 320, pattern: 'meteor' },
   ],
-  score: 10000,
+  score: 25000,
   introTime: 3000,
 };
 

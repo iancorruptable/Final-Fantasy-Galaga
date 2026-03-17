@@ -189,8 +189,7 @@ export class Player {
   respawn(): void {
     this.hp = this.maxHp;
     this.shield = 0;
-    this.weaponLevel = 0;
-    this.speedBoost = false;
+    // Keep weaponLevel, speedBoost, and bombs - they persist until game over
     this.isDead = false;
     this.sprite.setPosition(GAME_WIDTH / 2, GAME_HEIGHT - SAFE_AREA.bottom - 100);
     this.sprite.setVisible(true);

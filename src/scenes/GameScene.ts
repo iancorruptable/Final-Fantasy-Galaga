@@ -68,6 +68,9 @@ export class GameScene extends Phaser.Scene {
     // Launch HUD
     this.scene.launch('HudScene', { gameScene: this });
 
+    // Start epic fantasy background music
+    getAudio().startMusic();
+
     // Fade in
     this.cameras.main.fadeIn(300, 0, 0, 0);
 
@@ -319,6 +322,7 @@ export class GameScene extends Phaser.Scene {
     this.emitHudUpdate();
 
     // Victory after boss defeat sequence
+    getAudio().stopMusic();
     this.time.delayedCall(2500, () => {
       this.isVictory = true;
       this.scene.stop('HudScene');
@@ -348,6 +352,7 @@ export class GameScene extends Phaser.Scene {
       if (this.player.lives <= 0) {
         this.time.delayedCall(1500, () => {
           this.isGameOver = true;
+          getAudio().stopMusic();
           this.scene.stop('HudScene');
           this.scene.start('GameOverScene', {
             score: this.score,
@@ -456,6 +461,9 @@ export class GameScene extends Phaser.Scene {
     this.bossActive = true;
     const diffMod = this.waveSystem.getDifficultyMod();
     this.boss = new Boss(this, diffMod);
+
+    // Switch to intense boss music
+    getAudio().startBossMusic();
 
     this.emitWaveAnnounce(false, true);
     this.emitHudUpdate();
@@ -578,6 +586,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown(): void {
+    getAudio().stopMusic();
     this.player?.destroy();
     this.enemies.forEach(e => e.destroy());
     this.boss?.destroy();
