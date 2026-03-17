@@ -12,8 +12,7 @@ export class HudScene extends Phaser.Scene {
   private hpPips: Phaser.GameObjects.Image[] = [];
   private shieldPips: Phaser.GameObjects.Image[] = [];
   private livesDots: Phaser.GameObjects.Ellipse[] = [];
-  private specialBar!: Phaser.GameObjects.Rectangle;
-  private specialBg!: Phaser.GameObjects.Rectangle;
+  private bombText!: Phaser.GameObjects.Text;
   private bossBarBg!: Phaser.GameObjects.Rectangle;
   private bossBar!: Phaser.GameObjects.Rectangle;
   private bossLabel!: Phaser.GameObjects.Text;
@@ -87,25 +86,25 @@ export class HudScene extends Phaser.Scene {
       this.livesDots.push(dot);
     }
 
-    // Special ability bar (bottom right)
-    const specX = hudRight - 100;
+    // Bomb button (bottom right)
     const specY = GAME_HEIGHT - SAFE_AREA.bottom - 34;
-    this.specialBg = this.add.rectangle(specX, specY, 60, 8, 0x222244, 0.7)
-      .setOrigin(0, 0.5).setDepth(20).setStrokeStyle(1, COLORS.uiPanelBorder, 0.4);
-    this.specialBar = this.add.rectangle(specX, specY, 60, 8, COLORS.magenta, 0.8)
-      .setOrigin(0, 0.5).setDepth(20);
-
-    // Special button
     this.specialBtn = this.add.container(hudRight - 28, specY);
-    const btnBg = this.add.ellipse(0, 0, 44, 44, COLORS.magenta, 0.3)
-      .setStrokeStyle(2, COLORS.magenta, 0.6)
+    const btnBg = this.add.ellipse(0, 0, 44, 44, COLORS.red, 0.3)
+      .setStrokeStyle(2, COLORS.red, 0.6)
       .setInteractive({ useHandCursor: true });
-    const btnIcon = this.add.text(0, 0, '✦', {
-      fontSize: '20px',
-      color: '#ff88ff',
+    const btnIcon = this.add.text(0, 0, '💣', {
+      fontSize: '18px',
     }).setOrigin(0.5);
     this.specialBtn.add([btnBg, btnIcon]);
     this.specialBtn.setDepth(20);
+
+    // Bomb count label
+    this.bombText = this.add.text(hudRight - 74, specY, '×3', {
+      fontSize: '16px',
+      fontFamily: 'Arial, sans-serif',
+      color: '#ff6644',
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(20);
 
     btnBg.on('pointerup', () => {
       this.gameScene.useSpecialAbility();
@@ -186,9 +185,9 @@ export class HudScene extends Phaser.Scene {
       this.livesDots[i].setAlpha(i < data.lives ? 0.7 : 0.15);
     }
 
-    // Special bar
-    this.specialBar.width = 60 * data.specialMeter;
-    const canUse = data.specialMeter >= 1;
+    // Bomb count
+    this.bombText.setText(`×${data.bombs}`);
+    const canUse = data.bombs > 0;
     (this.specialBtn.first as Phaser.GameObjects.Ellipse).setAlpha(canUse ? 1 : 0.3);
 
     // Boss bar

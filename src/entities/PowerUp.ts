@@ -8,7 +8,7 @@ const TEXTURE_MAP: Record<PowerUpType, string> = {
   weapon_up: 'powerup_weapon',
   shield: 'powerup_shield',
   speed: 'powerup_speed',
-  special_charge: 'powerup_special',
+  bomb: 'powerup_special',
   score_gem: 'powerup_gem',
 };
 
@@ -28,11 +28,11 @@ export class PowerUpPool {
   spawn(x: number, y: number, type?: PowerUpType): void {
     if (!type) {
       const roll = Math.random();
-      if (roll < 0.30) type = 'score_gem';
-      else if (roll < 0.50) type = 'weapon_up';
-      else if (roll < 0.70) type = 'shield';
-      else if (roll < 0.85) type = 'speed';
-      else type = 'special_charge';
+      if (roll < 0.25) type = 'score_gem';
+      else if (roll < 0.45) type = 'weapon_up';
+      else if (roll < 0.60) type = 'shield';
+      else if (roll < 0.75) type = 'speed';
+      else type = 'bomb';
     }
 
     const texture = TEXTURE_MAP[type];

@@ -36,22 +36,18 @@ export const PLAYER = {
   fireRate: 180,
   bulletSpeed: 600,
   bulletDamage: 1,
-  specialCooldown: 8000,
-  specialDamage: 10,
+  specialDamage: 999,
   respawnDelay: 1000,
   lives: 3,
+  startBombs: 3,
   hitboxRadius: 10,
   shipWidth: 36,
   shipHeight: 44,
 };
 
 export const POWERUPS = {
-  dropChance: 0.15,
-  types: ['weapon_up', 'shield', 'speed', 'special_charge', 'score_gem'] as const,
-  duration: {
-    weapon_up: 8000,
-    speed: 6000,
-  },
+  dropChance: 0.30,
+  types: ['weapon_up', 'shield', 'speed', 'bomb', 'score_gem'] as const,
   magnetRange: 80,
   fallSpeed: 120,
 };

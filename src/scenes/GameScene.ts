@@ -384,16 +384,16 @@ export class GameScene extends Phaser.Scene {
 
     switch (type) {
       case 'weapon_up':
-        this.player.upgradeWeapon(POWERUPS.duration.weapon_up);
+        this.player.upgradeWeapon();
         break;
       case 'shield':
         this.player.addShield();
         break;
       case 'speed':
-        this.player.activateSpeed(POWERUPS.duration.speed);
+        this.player.activateSpeed();
         break;
-      case 'special_charge':
-        this.player.chargeSpecial();
+      case 'bomb':
+        this.player.addBomb();
         break;
       case 'score_gem':
         this.score += SCORING.gemValue * this.multiplier;
@@ -484,10 +484,10 @@ export class GameScene extends Phaser.Scene {
     }).explode(Math.floor(6 * scale), x, y);
   }
 
-  // Special ability (crystal burst)
+  // Bomb - instant kill all enemies, clear bullets
   useSpecialAbility(): void {
-    if (!this.player.canUseSpecial()) return;
-    this.player.useSpecial();
+    if (!this.player.canUseBomb()) return;
+    this.player.useBomb();
 
     // Damage all enemies on screen
     const damage = PLAYER.specialDamage;
@@ -556,7 +556,7 @@ export class GameScene extends Phaser.Scene {
       shield: this.player?.shield ?? 0,
       maxShield: this.player?.maxShield ?? PLAYER.maxShield,
       lives: this.player?.lives ?? 0,
-      specialMeter: this.player?.specialMeter ?? 0,
+      bombs: this.player?.bombs ?? 0,
       weaponLevel: this.player?.weaponLevel ?? 0,
       wave: this.waveSystem?.currentWave ?? 0,
       totalWaves: this.waveSystem?.totalWaves ?? WAVES.totalWaves,

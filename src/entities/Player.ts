@@ -11,11 +11,8 @@ export class Player {
   maxShield: number;
   lives: number;
   weaponLevel: number = 0;
-  weaponTimer: number = 0;
   speedBoost: boolean = false;
-  speedTimer: number = 0;
-  specialMeter: number = 1;
-  specialCooldownTimer: number = 0;
+  bombs: number = PLAYER.startBombs;
   isInvincible: boolean = false;
   isDead: boolean = false;
   fireTimer: number = 0;
@@ -91,30 +88,6 @@ export class Player {
 
   update(time: number, delta: number): void {
     if (this.isDead) return;
-
-    // Weapon upgrade timer
-    if (this.weaponLevel > 0 && this.weaponTimer > 0) {
-      this.weaponTimer -= delta;
-      if (this.weaponTimer <= 0) {
-        this.weaponLevel = 0;
-      }
-    }
-
-    // Speed boost timer
-    if (this.speedBoost && this.speedTimer > 0) {
-      this.speedTimer -= delta;
-      if (this.speedTimer <= 0) {
-        this.speedBoost = false;
-      }
-    }
-
-    // Special cooldown
-    if (this.specialMeter < 1) {
-      this.specialCooldownTimer -= delta;
-      if (this.specialCooldownTimer <= 0) {
-        this.specialMeter = 1;
-      }
-    }
 
     // Shield visual tracking
     if (this.shieldGraphic) {
@@ -217,6 +190,7 @@ export class Player {
     this.hp = this.maxHp;
     this.shield = 0;
     this.weaponLevel = 0;
+    this.speedBoost = false;
     this.isDead = false;
     this.sprite.setPosition(GAME_WIDTH / 2, GAME_HEIGHT - SAFE_AREA.bottom - 100);
     this.sprite.setVisible(true);
@@ -225,9 +199,8 @@ export class Player {
     this.startInvincibility(2000);
   }
 
-  upgradeWeapon(duration: number): void {
+  upgradeWeapon(): void {
     this.weaponLevel = Math.min(this.weaponLevel + 1, 3);
-    this.weaponTimer = duration;
     getAudio().powerUp();
   }
 
@@ -236,24 +209,23 @@ export class Player {
     getAudio().powerUp();
   }
 
-  activateSpeed(duration: number): void {
+  activateSpeed(): void {
     this.speedBoost = true;
-    this.speedTimer = duration;
     getAudio().powerUp();
   }
 
-  chargeSpecial(): void {
-    this.specialMeter = 1;
+  addBomb(): void {
+    this.bombs++;
     getAudio().powerUp();
   }
 
-  canUseSpecial(): boolean {
-    return this.specialMeter >= 1 && !this.isDead;
+  canUseBomb(): boolean {
+    return this.bombs > 0 && !this.isDead;
   }
 
-  useSpecial(): void {
-    this.specialMeter = 0;
-    this.specialCooldownTimer = PLAYER.specialCooldown;
+  useBomb(): void {
+    if (this.bombs <= 0) return;
+    this.bombs--;
     getAudio().specialAbility();
   }
 
